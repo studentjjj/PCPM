@@ -1,0 +1,726 @@
+t_sql 
+
+CHANGES MADE 
+- removed Ingredientevents from graph and dataset 
+
+
+-- tuberculosis patient list
+SELECT DISTINCT subject_id 
+INTO mimiciv_hosp.t_patients
+FROM mimiciv_hosp.diagnoses_icd
+INNER JOIN mimiciv_hosp.d_icd_diagnoses ON mimiciv_hosp.d_icd_diagnoses.icd_code=mimiciv_hosp.diagnoses_icd.icd_code
+AND mimiciv_hosp.d_icd_diagnoses.icd_version=mimiciv_hosp.diagnoses_icd.icd_version
+WHERE UPPER(long_title) LIKE '%TUBERCULOSIS%'
+
+
+-- HOSP-- 
+
+-- admissions 
+SELECT * FROM mimiciv_hosp.t_patients
+NATURAL JOIN mimiciv_hosp.admissions 
+
+-- d_hcspcs
+LEAVE
+
+-- d_icd_diagnoses
+SELECT * 
+INTO mimiciv_hosp.t_d_icd_diagnoses
+FROM mimiciv_hosp.d_icd_diagnoses
+WHERE UPPER(long_title) LIKE '%TUBERCULOSIS%'
+
+-- d_icd_procedures 
+LEAVE
+
+-- d_labitems
+LEAVE
+
+-- diagnoses_icd
+SELECT subject_id, hadm_id, seq_num, mimiciv_hosp.diagnoses_icd.icd_code, mimiciv_hosp.diagnoses_icd.icd_version 
+INTO mimiciv_hosp.t_diagnoses_icd
+FROM mimiciv_hosp.diagnoses_icd
+INNER JOIN mimiciv_hosp.d_icd_diagnoses ON mimiciv_hosp.d_icd_diagnoses.icd_code=mimiciv_hosp.diagnoses_icd.icd_code
+WHERE UPPER(long_title) LIKE '%TUBERCULOSIS%'
+
+-- drgcodes
+SELECT mimiciv_hosp.drgcodes.subject_id, mimiciv_hosp.drgcodes.hadm_id, mimiciv_hosp.drgcodes.drg_type, mimiciv_hosp.drgcodes.drg_code, mimiciv_hosp.drgcodes.description, mimiciv_hosp.drgcodes.drg_severity, mimiciv_hosp.drgcodes.drg_mortality
+INTO mimiciv_hosp.t_drgcodes
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.drgcodes on mimiciv_hosp.drgcodes.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+-- emar 
+SELECT 
+mimiciv_hosp.emar.subject_id,
+mimiciv_hosp.emar.hadm_id, 
+mimiciv_hosp.emar.emar_id,
+mimiciv_hosp.emar.emar_seq,
+mimiciv_hosp.emar.poe_id,
+mimiciv_hosp.emar.pharmacy_id,
+mimiciv_hosp.emar.enter_provider_id,
+mimiciv_hosp.emar.charttime, 
+mimiciv_hosp.emar.medication,
+mimiciv_hosp.emar.event_txt,
+mimiciv_hosp.emar.scheduletime,
+mimiciv_hosp.emar.storetime
+INTO mimiciv_hosp.t_emar
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.emar on mimiciv_hosp.emar.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+
+--emar_detail 
+SELECT 
+mimiciv_hosp.emar_detail.subject_id,
+mimiciv_hosp.emar_detail.emar_id,
+mimiciv_hosp.emar_detail.emar_seq,
+mimiciv_hosp.emar_detail.parent_field_ordinal,
+mimiciv_hosp.emar_detail.administration_type,
+mimiciv_hosp.emar_detail.pharmacy_id,
+mimiciv_hosp.emar_detail.barcode_type,
+mimiciv_hosp.emar_detail.reason_for_no_barcode,
+mimiciv_hosp.emar_detail.complete_dose_not_given,
+mimiciv_hosp.emar_detail.dose_due,
+mimiciv_hosp.emar_detail.dose_due_unit,
+mimiciv_hosp.emar_detail.will_remainder_of_dose_be_given,
+mimiciv_hosp.emar_detail.product_amount_given,
+mimiciv_hosp.emar_detail.product_unit,
+mimiciv_hosp.emar_detail.product_code,
+mimiciv_hosp.emar_detail.product_description, 
+mimiciv_hosp.emar_detail.product_description_other,
+mimiciv_hosp.emar_detail.prior_infusion_rate, 
+mimiciv_hosp.emar_detail.infusion_rate, 
+mimiciv_hosp.emar_detail.infusion_rate_adjustment,
+mimiciv_hosp.emar_detail.infusion_rate_adjustment_amount,
+mimiciv_hosp.emar_detail.infusion_rate_unit, 
+mimiciv_hosp.emar_detail.route, 
+mimiciv_hosp.emar_detail.infusion_complete,
+mimiciv_hosp.emar_detail.completion_interval,
+mimiciv_hosp.emar_detail.new_iv_bag_hung,
+mimiciv_hosp.emar_detail.continued_infusion_in_other_location, 
+mimiciv_hosp.emar_detail.restart_interval, 
+mimiciv_hosp.emar_detail.side,
+mimiciv_hosp.emar_detail.site,
+mimiciv_hosp.emar_detail.non_formulary_visual_verification
+INTO mimiciv_hosp.t_emar_detail
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.emar_detail on mimiciv_hosp.emar_detail.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+-- hcpcsevents 
+SELECT mimiciv_hosp.hcpcsevents.subject_id, mimiciv_hosp.hcpcsevents.hadm_id, mimiciv_hosp.hcpcsevents.chartdate, mimiciv_hosp.hcpcsevents.hcpcs_cd, mimiciv_hosp.hcpcsevents.seq_num, mimiciv_hosp.hcpcsevents.short_description
+INTO mimiciv_hosp.t_hcpcsevents
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.hcpcsevents on mimiciv_hosp.hcpcsevents.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+-- labevents 
+SELECT mimiciv_hosp.labevents.labevent_id, mimiciv_hosp.labevents.subject_id, mimiciv_hosp.labevents.hadm_id, mimiciv_hosp.labevents.specimen_id, mimiciv_hosp.labevents.itemid, mimiciv_hosp.labevents.order_provider_id, mimiciv_hosp.labevents.charttime, mimiciv_hosp.labevents.storetime, mimiciv_hosp.labevents.value, mimiciv_hosp.labevents.valuenum, mimiciv_hosp.labevents.valueuom, mimiciv_hosp.labevents.ref_range_lower, mimiciv_hosp.labevents.ref_range_upper, mimiciv_hosp.labevents.flag, mimiciv_hosp.labevents.priority, mimiciv_hosp.labevents.comments
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.labevents on mimiciv_hosp.labevents.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+
+-- microbiologyevents 
+SELECT 
+mimiciv_hosp.microbiologyevents.microevent_id,
+mimiciv_hosp.microbiologyevents.subject_id, 
+mimiciv_hosp.microbiologyevents.hadm_id, 
+mimiciv_hosp.microbiologyevents.micro_specimen_id,
+mimiciv_hosp.microbiologyevents.order_provider_id,
+mimiciv_hosp.microbiologyevents.chartdate, 
+mimiciv_hosp.microbiologyevents.spec_itemid, 
+mimiciv_hosp.microbiologyevents.spec_type_desc,
+mimiciv_hosp.microbiologyevents.test_seq, 
+mimiciv_hosp.microbiologyevents.storedate, 
+mimiciv_hosp.microbiologyevents.storetime,
+mimiciv_hosp.microbiologyevents.test_itemid, 
+mimiciv_hosp.microbiologyevents.test_name,
+mimiciv_hosp.microbiologyevents.org_itemid, 
+mimiciv_hosp.microbiologyevents.org_name, 
+mimiciv_hosp.microbiologyevents.isolate_num,
+mimiciv_hosp.microbiologyevents.quantity, 
+mimiciv_hosp.microbiologyevents.ab_itemid,
+mimiciv_hosp.microbiologyevents.ab_name, 
+mimiciv_hosp.microbiologyevents.dilution_text,
+mimiciv_hosp.microbiologyevents.dilution_comparison, 
+mimiciv_hosp.microbiologyevents.dilution_value,
+mimiciv_hosp.microbiologyevents.interpretation, 
+mimiciv_hosp.microbiologyevents.comments
+INTO mimiciv_hosp.t_microbiologyevents
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.microbiologyevents ON mimiciv_hosp.microbiologyevents.subject_id = mimiciv_hosp.t_patients.subject_id;
+
+
+-- omr 
+SELECT mimiciv_hosp.omr.subject_id, mimiciv_hosp.omr.chartdate, mimiciv_hosp.omr.seq_num, mimiciv_hosp.omr.result_name, mimiciv_hosp.omr.result_value
+INTO mimiciv_hosp.t_omr
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.omr on mimiciv_hosp.omr.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+-- patients
+SELECT 
+mimiciv_hosp.patients.subject_id,
+mimiciv_hosp.patients.gender, 
+mimiciv_hosp.patients.anchor_age,
+mimiciv_hosp.patients.anchor_year, 
+mimiciv_hosp.patients.anchor_year_group, 
+mimiciv_hosp.patients.dod
+INTO mimiciv_hosp.t_patients2
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.patients ON mimiciv_hosp.patients.subject_id = mimiciv_hosp.t_patients.subject_id;
+
+-- pharmacy
+SELECT 
+mimiciv_hosp.pharmacy.subject_id,
+mimiciv_hosp.pharmacy.hadm_id,
+mimiciv_hosp.pharmacy.pharmacy_id,
+mimiciv_hosp.pharmacy.poe_id, 
+mimiciv_hosp.pharmacy.starttime,
+mimiciv_hosp.pharmacy.stoptime,
+mimiciv_hosp.pharmacy.medication,
+mimiciv_hosp.pharmacy.proc_type,
+mimiciv_hosp.pharmacy.status,
+mimiciv_hosp.pharmacy.entertime,
+mimiciv_hosp.pharmacy.verifiedtime,
+mimiciv_hosp.pharmacy.route,
+mimiciv_hosp.pharmacy.frequency,
+mimiciv_hosp.pharmacy.disp_sched,
+mimiciv_hosp.pharmacy.infusion_type,
+mimiciv_hosp.pharmacy.sliding_scale,
+mimiciv_hosp.pharmacy.lockout_interval,
+mimiciv_hosp.pharmacy.basal_rate,
+mimiciv_hosp.pharmacy.one_hr_max,
+mimiciv_hosp.pharmacy.doses_per_24_hrs,
+mimiciv_hosp.pharmacy.duration,
+mimiciv_hosp.pharmacy.duration_interval,
+mimiciv_hosp.pharmacy.expiration_value,
+mimiciv_hosp.pharmacy.expiration_unit,
+mimiciv_hosp.pharmacy.expirationdate, 
+mimiciv_hosp.pharmacy.dispensation,
+mimiciv_hosp.pharmacy.fill_quantity
+INTO mimiciv_hosp.t_pharmacy
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.pharmacy on mimiciv_hosp.pharmacy.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+-- poe 
+SELECT 
+mimiciv_hosp.poe.poe_id,
+mimiciv_hosp.poe.poe_seq,
+mimiciv_hosp.poe.subject_id,
+mimiciv_hosp.poe.hadm_id, 
+mimiciv_hosp.poe.ordertime,
+mimiciv_hosp.poe.order_type,
+mimiciv_hosp.poe.order_subtype,
+mimiciv_hosp.poe.transaction_type,
+mimiciv_hosp.poe.discontinue_of_poe_id,
+mimiciv_hosp.poe.discontinued_by_poe_id,
+mimiciv_hosp.poe.order_provider_id,
+mimiciv_hosp.poe.order_status
+INTO mimiciv_hosp.t_poe
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.poe on mimiciv_hosp.poe.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+
+--poe_detail 
+SELECT 
+mimiciv_hosp.poe_detail.poe_id,
+mimiciv_hosp.poe_detail.poe_seq,
+mimiciv_hosp.poe_detail.subject_id,
+mimiciv_hosp.poe_detail.field_name, 
+mimiciv_hosp.poe_detail.field_value
+INTO mimiciv_hosp.t_poe_detail
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.poe_detail on mimiciv_hosp.poe_detail.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+
+-- prescriptions 
+SELECT 
+mimiciv_hosp.prescriptions.subject_id,
+mimiciv_hosp.prescriptions.hadm_id,
+mimiciv_hosp.prescriptions.pharmacy_id,
+mimiciv_hosp.prescriptions.poe_id, 
+mimiciv_hosp.prescriptions.poe_seq,
+mimiciv_hosp.prescriptions.order_provider_id,
+mimiciv_hosp.prescriptions.starttime,
+mimiciv_hosp.prescriptions.stoptime,
+mimiciv_hosp.prescriptions.drug,
+mimiciv_hosp.prescriptions.drug_type,
+mimiciv_hosp.prescriptions.formulary_drug_cd,
+mimiciv_hosp.prescriptions.gsn,
+mimiciv_hosp.prescriptions.ndc,
+mimiciv_hosp.prescriptions.prod_strength,
+mimiciv_hosp.prescriptions.form_rx,
+mimiciv_hosp.prescriptions.dose_val_rx,
+mimiciv_hosp.prescriptions.form_val_disp,
+mimiciv_hosp.prescriptions.form_unit_disp,
+mimiciv_hosp.prescriptions.doses_per_24_hrs,
+mimiciv_hosp.prescriptions.route
+INTO mimiciv_hosp.t_prescriptions
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.prescriptions on mimiciv_hosp.prescriptions.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+
+--procedures_icd
+SELECT mimiciv_hosp.procedures_icd.subject_id, mimiciv_hosp.procedures_icd.hadm_id, mimiciv_hosp.procedures_icd.seq_num, mimiciv_hosp.procedures_icd.chartdate, mimiciv_hosp.procedures_icd.icd_code, mimiciv_hosp.procedures_icd.icd_version
+INTO mimiciv_hosp.t_procedures_icd
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.procedures_icd on mimiciv_hosp.procedures_icd.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+
+--provider
+LEAVE
+
+-- services
+SELECT mimiciv_hosp.t_patients.subject_id, hadm_id, transfertime, prev_service, curr_service 
+INTO mimiciv_hosp.t_services
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.services on mimiciv_hosp.services.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+-- transfers 
+SELECT mimiciv_hosp.t_patients.subject_id,hadm_id, transfer_id, eventtype, careunit, intime, outtime 
+INTO mimiciv_hosp.t_transfers
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_hosp.transfers on mimiciv_hosp.transfers.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+
+
+*** WHERE UPPER(long_title) LIKE '%TUBERCULOSIS%'
+
+
+
+-- ICU -- 
+
+-- caregiver
+LEAVE
+
+-- chartevents
+SELECT 
+mimiciv_icu.chartevents.subject_id,
+mimiciv_icu.chartevents.hadm_id, 
+mimiciv_icu.chartevents.stay_id, 
+mimiciv_icu.chartevents.caregiver_id, 
+mimiciv_icu.chartevents.charttime, 
+mimiciv_icu.chartevents.storetime, 
+mimiciv_icu.chartevents.itemid, 
+mimiciv_icu.chartevents.value,
+mimiciv_icu.chartevents.valuenum, 
+mimiciv_icu.chartevents.valueuom, 
+mimiciv_icu.chartevents.warning
+INTO mimiciv_icu.t_chartevents
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_icu.chartevents on mimiciv_icu.chartevents.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+
+-- d_items
+LEAVE
+
+-- datetimeevents
+SELECT 
+mimiciv_icu.datetimeevents.subject_id,
+mimiciv_icu.datetimeevents.hadm_id, 
+mimiciv_icu.datetimeevents.stay_id, 
+mimiciv_icu.datetimeevents.caregiver_id, 
+mimiciv_icu.datetimeevents.charttime, 
+mimiciv_icu.datetimeevents.storetime, 
+mimiciv_icu.datetimeevents.itemid, 
+mimiciv_icu.datetimeevents.value,
+mimiciv_icu.datetimeevents.valueuom, 
+mimiciv_icu.datetimeevents.warning
+INTO mimiciv_icu.t_datetimeevents
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_icu.datetimeevents on mimiciv_icu.datetimeevents.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+
+-- icustays
+SELECT 
+mimiciv_icu.icustays.subject_id,
+mimiciv_icu.icustays.hadm_id, 
+mimiciv_icu.icustays.stay_id, 
+mimiciv_icu.icustays.first_careunit, 
+mimiciv_icu.icustays.last_careunit, 
+mimiciv_icu.icustays.intime, 
+mimiciv_icu.icustays.outtime, 
+mimiciv_icu.icustays.los
+INTO mimiciv_icu.t_icustays
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_icu.icustays on mimiciv_icu.icustays.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+-- ingredientevents
+SELECT 
+mimiciv_icu.ingredientevents.subject_id,
+mimiciv_icu.ingredientevents.hadm_id, 
+mimiciv_icu.ingredientevents.stay_id,
+mimiciv_icu.ingredientevents.caregiver_id,
+mimiciv_icu.ingredientevents.starttime, 
+mimiciv_icu.ingredientevents.endtime, 
+mimiciv_icu.ingredientevents.storetime, 
+mimiciv_icu.ingredientevents.itemid,
+mimiciv_icu.ingredientevents.amount,
+mimiciv_icu.ingredientevents.amountuom,
+mimiciv_icu.ingredientevents.rate,
+mimiciv_icu.ingredientevents.rateuom,
+mimiciv_icu.ingredientevents.orderid,
+mimiciv_icu.ingredientevents.linkorderid,
+mimiciv_icu.ingredientevents.statusdescription,
+mimiciv_icu.ingredientevents.originalamount,
+mimiciv_icu.ingredientevents.originalrate
+INTO mimiciv_icu.t_ingredientevents
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_icu.ingredientevents on mimiciv_icu.ingredientevents.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+
+-- inputevents
+SELECT 
+mimiciv_icu.inputevents.subject_id,
+mimiciv_icu.inputevents.hadm_id, 
+mimiciv_icu.inputevents.stay_id,
+mimiciv_icu.inputevents.caregiver_id,
+mimiciv_icu.inputevents.starttime, 
+mimiciv_icu.inputevents.endtime, 
+mimiciv_icu.inputevents.storetime, 
+mimiciv_icu.inputevents.itemid,
+mimiciv_icu.inputevents.amount,
+mimiciv_icu.inputevents.amountuom,
+mimiciv_icu.inputevents.rate,
+mimiciv_icu.inputevents.rateuom,
+mimiciv_icu.inputevents.orderid,
+mimiciv_icu.inputevents.linkorderid,
+mimiciv_icu.inputevents.ordercategoryname,
+mimiciv_icu.inputevents.secondaryordercategoryname,
+mimiciv_icu.inputevents.ordercomponenttypedescription,
+mimiciv_icu.inputevents.ordercategorydescription,
+mimiciv_icu.inputevents.patientweight,
+mimiciv_icu.inputevents.totalamount,
+mimiciv_icu.inputevents.totalamountuom,
+mimiciv_icu.inputevents.isopenbag,
+mimiciv_icu.inputevents.continueinnextdept,
+mimiciv_icu.inputevents.statusdescription,
+mimiciv_icu.inputevents.originalamount,
+mimiciv_icu.inputevents.originalrate
+INTO mimiciv_icu.t_inputevents
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_icu.inputevents on mimiciv_icu.inputevents.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+
+-- outputevents
+SELECT 
+mimiciv_icu.outputevents.subject_id,
+mimiciv_icu.outputevents.hadm_id, 
+mimiciv_icu.outputevents.stay_id, 
+mimiciv_icu.outputevents.caregiver_id, 
+mimiciv_icu.outputevents.charttime, 
+mimiciv_icu.outputevents.storetime, 
+mimiciv_icu.outputevents.itemid, 
+mimiciv_icu.outputevents.value,
+mimiciv_icu.outputevents.valueuom
+INTO mimiciv_icu.t_outputevents
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_icu.outputevents on mimiciv_icu.outputevents.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+
+-- procedureevents
+SELECT 
+mimiciv_icu.procedureevents.subject_id,
+mimiciv_icu.procedureevents.hadm_id, 
+mimiciv_icu.procedureevents.stay_id,
+mimiciv_icu.procedureevents.caregiver_id,
+mimiciv_icu.procedureevents.starttime, 
+mimiciv_icu.procedureevents.endtime, 
+mimiciv_icu.procedureevents.storetime, 
+mimiciv_icu.procedureevents.itemid,
+mimiciv_icu.procedureevents.value,
+mimiciv_icu.procedureevents.valueuom,
+mimiciv_icu.procedureevents.location,
+mimiciv_icu.procedureevents.locationcategory,
+mimiciv_icu.procedureevents.orderid,
+mimiciv_icu.procedureevents.ordercategoryname,
+mimiciv_icu.procedureevents.ordercategorydescription,
+mimiciv_icu.procedureevents.patientweight,
+mimiciv_icu.procedureevents.isopenbag,
+mimiciv_icu.procedureevents.continueinnextdept,
+mimiciv_icu.procedureevents.statusdescription,
+mimiciv_icu.procedureevents.originalamount,
+mimiciv_icu.procedureevents.originalrate
+INTO mimiciv_icu.t_procedureevents
+FROM mimiciv_hosp.t_patients
+JOIN mimiciv_icu.procedureevents on mimiciv_icu.procedureevents.subject_id=mimiciv_hosp.t_patients.subject_id;
+
+
+MERGED 
+
+-- Labevents + D_Labitems 
+SELECT 
+mimiciv_hosp.t_labevents.labevent_id, 
+mimiciv_hosp.t_labevents.subject_id, 
+mimiciv_hosp.t_labevents.hadm_id, 
+mimiciv_hosp.t_labevents.specimen_id, 
+mimiciv_hosp.t_labevents.itemid, 
+mimiciv_hosp.d_labitems.label, 
+mimiciv_hosp.d_labitems.fluid, 
+mimiciv_hosp.d_labitems.category, 
+mimiciv_hosp.t_labevents.order_provider_id, 
+mimiciv_hosp.t_labevents.charttime, 
+mimiciv_hosp.t_labevents.storetime, 
+mimiciv_hosp.t_labevents.value, 
+mimiciv_hosp.t_labevents.valuenum, 
+mimiciv_hosp.t_labevents.valueuom, 
+mimiciv_hosp.t_labevents.ref_range_lower, 
+mimiciv_hosp.t_labevents.ref_range_upper, 
+mimiciv_hosp.t_labevents.flag, 
+mimiciv_hosp.t_labevents.priority, 
+mimiciv_hosp.t_labevents.comments
+INTO mimiciv_hosp.t_labevents_merged
+FROM mimiciv_hosp.d_labitems
+JOIN mimiciv_hosp.t_labevents on mimiciv_hosp.t_labevents.itemid = mimiciv_hosp.d_labitems.itemid;
+
+-- Procedures_ICD + D_ICD_Diagnoses
+SELECT 
+mimiciv_hosp.t_procedures_icd.subject_id, 
+mimiciv_hosp.t_procedures_icd.hadm_id, 
+mimiciv_hosp.t_procedures_icd.seq_num, 
+mimiciv_hosp.t_procedures_icd.chartdate, 
+mimiciv_hosp.t_procedures_icd.icd_code, 
+mimiciv_hosp.t_procedures_icd.icd_version,
+mimiciv_hosp.d_icd_procedures.long_title
+INTO mimiciv_hosp.t_procedures_icd_merged
+FROM mimiciv_hosp.d_icd_procedures
+JOIN mimiciv_hosp.t_procedures_icd on mimiciv_hosp.t_procedures_icd.icd_code=mimiciv_hosp.d_icd_procedures.icd_code;
+
+-- Diagnoses + D_ICD_Procedures
+SELECT 
+mimiciv_hosp.t_diagnoses_icd.subject_id, 
+mimiciv_hosp.t_diagnoses_icd.hadm_id, 
+mimiciv_hosp.t_diagnoses_icd.seq_num, 
+mimiciv_hosp.t_diagnoses_icd.icd_code, 
+mimiciv_hosp.t_diagnoses_icd.icd_version,
+mimiciv_hosp.t_d_icd_diagnoses.long_title
+INTO mimiciv_hosp.t_diagnoses_icd_merged
+FROM mimiciv_hosp.t_d_icd_diagnoses
+JOIN mimiciv_hosp.t_diagnoses_icd on mimiciv_hosp.t_diagnoses_icd.icd_code=mimiciv_hosp.t_d_icd_diagnoses.icd_code;
+
+-- POE + POE_Detail 
+SELECT 
+mimiciv_hosp.t_poe.poe_id,
+mimiciv_hosp.t_poe.poe_seq,
+mimiciv_hosp.t_poe_detail.field_name,
+mimiciv_hosp.t_poe_detail.field_value,
+mimiciv_hosp.t_poe.subject_id,
+mimiciv_hosp.t_poe.hadm_id, 
+mimiciv_hosp.t_poe.ordertime,
+mimiciv_hosp.t_poe.order_type,
+mimiciv_hosp.t_poe.order_subtype,
+mimiciv_hosp.t_poe.transaction_type,
+mimiciv_hosp.t_poe.discontinue_of_poe_id,
+mimiciv_hosp.t_poe.discontinued_by_poe_id,
+mimiciv_hosp.t_poe.order_provider_id,
+mimiciv_hosp.t_poe.order_status
+INTO mimiciv_hosp.t_poe_merged
+FROM mimiciv_hosp.t_poe_detail
+JOIN mimiciv_hosp.t_poe on mimiciv_hosp.t_poe.poe_id = mimiciv_hosp.t_poe_detail.poe_id;
+
+
+-- HCPCSevents + D_HCPCS
+SELECT 
+mimiciv_hosp.t_hcpcsevents.subject_id, 
+mimiciv_hosp.t_hcpcsevents.hadm_id, 
+mimiciv_hosp.t_hcpcsevents.chartdate,
+mimiciv_hosp.t_hcpcsevents.hcpcs_cd,
+mimiciv_hosp.t_hcpcsevents.seq_num, 
+mimiciv_hosp.t_hcpcsevents.short_description,
+mimiciv_hosp.d_hcpcs.long_description
+INTO mimiciv_hosp.t_hcpcsevents_merged
+FROM mimiciv_hosp.d_hcpcs
+JOIN mimiciv_hosp.t_hcpcsevents on mimiciv_hosp.t_hcpcsevents.hcpcs_cd = mimiciv_hosp.d_hcpcs.code;
+
+-- EMAR + EMAR_Detail 
+SELECT 
+mimiciv_hosp.t_emar.subject_id,
+mimiciv_hosp.t_emar.hadm_id, 
+mimiciv_hosp.t_emar.emar_id,
+mimiciv_hosp.t_emar.emar_seq,
+mimiciv_hosp.t_emar.poe_id,
+mimiciv_hosp.t_emar.pharmacy_id,
+mimiciv_hosp.t_emar.enter_provider_id,
+mimiciv_hosp.t_emar.charttime, 
+mimiciv_hosp.t_emar.medication,
+mimiciv_hosp.t_emar.event_txt,
+mimiciv_hosp.t_emar.scheduletime,
+mimiciv_hosp.t_emar.storetime,
+mimiciv_hosp.t_emar_detail.parent_field_ordinal,
+mimiciv_hosp.t_emar_detail.administration_type,
+mimiciv_hosp.t_emar_detail.barcode_type,
+mimiciv_hosp.t_emar_detail.reason_for_no_barcode,
+mimiciv_hosp.t_emar_detail.complete_dose_not_given,
+mimiciv_hosp.t_emar_detail.dose_due,
+mimiciv_hosp.t_emar_detail.dose_due_unit,
+mimiciv_hosp.t_emar_detail.will_remainder_of_dose_be_given,
+mimiciv_hosp.t_emar_detail.product_amount_given,
+mimiciv_hosp.t_emar_detail.product_unit,
+mimiciv_hosp.t_emar_detail.product_code,
+mimiciv_hosp.t_emar_detail.product_description, 
+mimiciv_hosp.t_emar_detail.product_description_other,
+mimiciv_hosp.t_emar_detail.prior_infusion_rate, 
+mimiciv_hosp.t_emar_detail.infusion_rate, 
+mimiciv_hosp.t_emar_detail.infusion_rate_adjustment,
+mimiciv_hosp.t_emar_detail.infusion_rate_adjustment_amount,
+mimiciv_hosp.t_emar_detail.infusion_rate_unit, 
+mimiciv_hosp.t_emar_detail.route, 
+mimiciv_hosp.t_emar_detail.infusion_complete,
+mimiciv_hosp.t_emar_detail.completion_interval,
+mimiciv_hosp.t_emar_detail.new_iv_bag_hung,
+mimiciv_hosp.t_emar_detail.continued_infusion_in_other_location, 
+mimiciv_hosp.t_emar_detail.restart_interval, 
+mimiciv_hosp.t_emar_detail.side,
+mimiciv_hosp.t_emar_detail.site,
+mimiciv_hosp.t_emar_detail.non_formulary_visual_verification
+INTO mimiciv_hosp.t_emar_merged
+FROM mimiciv_hosp.t_emar_detail
+JOIN mimiciv_hosp.t_emar on mimiciv_hosp.t_emar.emar_id = mimiciv_hosp.t_emar_detail.emar_id;
+
+
+-- D_Item + Input
+SELECT 
+mimiciv_icu.t_inputevents.subject_id,
+mimiciv_icu.t_inputevents.hadm_id, 
+mimiciv_icu.t_inputevents.stay_id,
+mimiciv_icu.t_inputevents.caregiver_id,
+mimiciv_icu.t_inputevents.starttime, 
+mimiciv_icu.t_inputevents.endtime, 
+mimiciv_icu.t_inputevents.storetime, 
+mimiciv_icu.t_inputevents.itemid,
+mimiciv_icu.d_items.label,
+mimiciv_icu.d_items.abbreviation, 
+mimiciv_icu.d_items.category,
+mimiciv_icu.d_items.unitname, 
+mimiciv_icu.d_items.param_type, 
+mimiciv_icu.d_items.lownormalvalue, 
+mimiciv_icu.d_items.highnormalvalue,
+mimiciv_icu.t_inputevents.amount,
+mimiciv_icu.t_inputevents.amountuom,
+mimiciv_icu.t_inputevents.rate,
+mimiciv_icu.t_inputevents.rateuom,
+mimiciv_icu.t_inputevents.orderid,
+mimiciv_icu.t_inputevents.linkorderid,
+mimiciv_icu.t_inputevents.ordercategoryname,
+mimiciv_icu.t_inputevents.secondaryordercategoryname,
+mimiciv_icu.t_inputevents.ordercomponenttypedescription,
+mimiciv_icu.t_inputevents.ordercategorydescription,
+mimiciv_icu.t_inputevents.patientweight,
+mimiciv_icu.t_inputevents.totalamount,
+mimiciv_icu.t_inputevents.totalamountuom,
+mimiciv_icu.t_inputevents.isopenbag,
+mimiciv_icu.t_inputevents.continueinnextdept,
+mimiciv_icu.t_inputevents.statusdescription,
+mimiciv_icu.t_inputevents.originalamount,
+mimiciv_icu.t_inputevents.originalrate
+INTO mimiciv_icu.t_inputevents_merged
+FROM mimiciv_icu.d_items
+JOIN mimiciv_icu.t_inputevents on mimiciv_icu.t_inputevents.itemid = mimiciv_icu.d_items.itemid;
+
+-- D_Item + output  
+SELECT 
+mimiciv_icu.t_outputevents.subject_id,
+mimiciv_icu.t_outputevents.hadm_id, 
+mimiciv_icu.t_outputevents.stay_id, 
+mimiciv_icu.t_outputevents.caregiver_id, 
+mimiciv_icu.t_outputevents.charttime, 
+mimiciv_icu.t_outputevents.storetime, 
+mimiciv_icu.t_outputevents.itemid, 
+mimiciv_icu.d_items.itemid, 
+mimiciv_icu.d_items.label,
+mimiciv_icu.d_items.category,
+mimiciv_icu.d_items.unitname, 
+mimiciv_icu.d_items.param_type, 
+mimiciv_icu.d_items.lownormalvalue, 
+mimiciv_icu.d_items.highnormalvalue,
+mimiciv_icu.t_outputevents.value,
+mimiciv_icu.t_outputevents.valueuom
+INTO mimiciv_icu.t_outputevents_merged
+FROM mimiciv_icu.d_items
+JOIN mimiciv_icu.t_outputevents on mimiciv_icu.t_outputevents.itemid = mimiciv_icu.d_items.itemid;
+
+
+-- D_Item + chartevents
+SELECT 
+mimiciv_icu.t_chartevents.subject_id,
+mimiciv_icu.t_chartevents.hadm_id, 
+mimiciv_icu.t_chartevents.stay_id, 
+mimiciv_icu.t_chartevents.caregiver_id, 
+mimiciv_icu.t_chartevents.charttime, 
+mimiciv_icu.t_chartevents.storetime, 
+mimiciv_icu.t_chartevents.itemid, 
+mimiciv_icu.d_items.label,
+mimiciv_icu.d_items.category,
+mimiciv_icu.d_items.unitname, 
+mimiciv_icu.d_items.param_type, 
+mimiciv_icu.d_items.lownormalvalue, 
+mimiciv_icu.d_items.highnormalvalue,
+mimiciv_icu.t_chartevents.value,
+mimiciv_icu.t_chartevents.valuenum, 
+mimiciv_icu.t_chartevents.valueuom, 
+mimiciv_icu.t_chartevents.warning
+INTO mimiciv_icu.t_chartevents_merged
+FROM mimiciv_icu.d_items
+JOIN mimiciv_icu.t_chartevents on mimiciv_icu.t_chartevents.itemid = mimiciv_icu.d_items.itemid;
+
+
+-- D_Item + procedure
+SELECT 
+mimiciv_icu.t_procedureevents.subject_id,
+mimiciv_icu.t_procedureevents.hadm_id, 
+mimiciv_icu.t_procedureevents.stay_id,
+mimiciv_icu.t_procedureevents.caregiver_id,
+mimiciv_icu.t_procedureevents.starttime, 
+mimiciv_icu.t_procedureevents.endtime, 
+mimiciv_icu.t_procedureevents.storetime, 
+mimiciv_icu.t_procedureevents.itemid,
+mimiciv_icu.d_items.label,
+mimiciv_icu.d_items.category,
+mimiciv_icu.d_items.unitname, 
+mimiciv_icu.d_items.param_type, 
+mimiciv_icu.d_items.lownormalvalue, 
+mimiciv_icu.d_items.highnormalvalue,
+mimiciv_icu.t_procedureevents.value,
+mimiciv_icu.t_procedureevents.valueuom,
+mimiciv_icu.t_procedureevents.location,
+mimiciv_icu.t_procedureevents.locationcategory,
+mimiciv_icu.t_procedureevents.orderid,
+mimiciv_icu.t_procedureevents.ordercategoryname,
+mimiciv_icu.t_procedureevents.ordercategorydescription,
+mimiciv_icu.t_procedureevents.patientweight,
+mimiciv_icu.t_procedureevents.isopenbag,
+mimiciv_icu.t_procedureevents.continueinnextdept,
+mimiciv_icu.t_procedureevents.statusdescription,
+mimiciv_icu.t_procedureevents.originalamount,
+mimiciv_icu.t_procedureevents.originalrate
+INTO mimiciv_icu.t_procedureevents_merged
+FROM mimiciv_icu.d_items
+JOIN mimiciv_icu.t_procedureevents on mimiciv_icu.t_procedureevents.itemid = mimiciv_icu.d_items.itemid;
+
+
+-- D_Item + datetimeevents 
+SELECT 
+mimiciv_icu.t_datetimeevents.subject_id,
+mimiciv_icu.t_datetimeevents.hadm_id, 
+mimiciv_icu.t_datetimeevents.stay_id, 
+mimiciv_icu.t_datetimeevents.caregiver_id, 
+mimiciv_icu.t_datetimeevents.charttime, 
+mimiciv_icu.t_datetimeevents.storetime, 
+mimiciv_icu.t_datetimeevents.itemid, 
+mimiciv_icu.d_items.label,
+mimiciv_icu.d_items.category,
+mimiciv_icu.d_items.unitname, 
+mimiciv_icu.d_items.param_type, 
+mimiciv_icu.d_items.lownormalvalue, 
+mimiciv_icu.d_items.highnormalvalue,
+mimiciv_icu.t_datetimeevents.value,
+mimiciv_icu.t_datetimeevents.valueuom, 
+mimiciv_icu.t_datetimeevents.warning
+INTO mimiciv_icu.t_datetimeevents_merged
+FROM mimiciv_icu.d_items
+JOIN mimiciv_icu.t_datetimeevents on mimiciv_icu.t_datetimeevents.itemid = mimiciv_icu.d_items.itemid;
+
+
+mimiciv_icu.d_items.label,
+mimiciv_icu.d_items.category,
+mimiciv_icu.d_items.unitname, 
+mimiciv_icu.d_items.param_type, 
+mimiciv_icu.d_items.lownormalvalue, 
+mimiciv_icu.d_items.highnormalvalue,
+
+

@@ -1,0 +1,1410 @@
+{
+  "title": "T dashboard",
+  "version": "2.3",
+  "settings": {
+    "pagenumber": 1,
+    "editable": true,
+    "fullscreenEnabled": false,
+    "parameters": {
+      "neodash_subject_id": {
+        "low": 10043646,
+        "high": 0
+      },
+      "neodash_hadm_id": {
+        "low": 23469038,
+        "high": 0
+      },
+      "neodash_icu_event": "HAS_PROCEDURE_EVENT",
+      "neodash_input_event": "",
+      "neodash_icu_events": "HAS_DATETIME_EVENT",
+      "neodash_icu_events_display": "HAS_DATETIME_EVENT",
+      "neodash_icu_event_display": "HAS_INPUT_EVENT",
+      "neodash_title_icu": "HAS_OUTPUT_EVENT",
+      "neodash_icd_code": "Z8611  "
+    },
+    "theme": "light"
+  },
+  "pages": [
+    {
+      "title": "Case Study",
+      "reports": [
+        {
+          "id": "d733ecac-0c7d-48e3-abdc-2469f517afe6",
+          "title": "To begin, please select a patient",
+          "query": "MATCH (Patient:Patients)\nRETURN Patient.subject_id as subject_id\nLIMIT 20",
+          "width": 12,
+          "height": 5,
+          "x": 0,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "subject_id",
+                "value": "subject_id",
+                "customization": "set variable",
+                "customizationValue": "subject_id"
+              },
+              {
+                "condition": "Click",
+                "field": "subject_id",
+                "value": "1/Online Medical Record (OMR)",
+                "customization": "set page",
+                "customizationValue": ""
+              }
+            ],
+            "refreshButtonEnabled": true
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        }
+      ]
+    },
+    {
+      "title": "Online Medical Record (OMR)",
+      "reports": [
+        {
+          "id": "1e5dd182-d4b1-4350-840a-e6c5aae3cca2",
+          "title": "Subject_ID",
+          "query": "\n//Display Subject_ID (single) \nRETURN  $neodash_subject_id\n\n",
+          "width": 2,
+          "height": 1,
+          "x": 0,
+          "y": 0,
+          "type": "value",
+          "selection": {},
+          "settings": {},
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "6856d83c-83a0-4f8f-bc44-b2ef0b9fa1ad",
+          "title": "Total Number of Admissions",
+          "query": "MATCH (n:Admissions {subject_id: $neodash_subject_id}) RETURN count(n)",
+          "width": 2,
+          "height": 1,
+          "x": 5,
+          "y": 0,
+          "type": "value",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "verticalAlign": "middle",
+            "textAlign": "center"
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "40fbc83f-bd7b-4667-afc3-fce0a674f909",
+          "title": "Current Location/Status",
+          "query": "MATCH (m:Admissions {subject_id: $neodash_subject_id})\nRETURN \n       m.discharge_location AS Discharge_Location\nORDER BY m.dischtime DESC\nLIMIT 1\n",
+          "width": 3,
+          "height": 1,
+          "x": 2,
+          "y": 0,
+          "type": "value",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "styleRules": [
+              {
+                "field": "Discharge_Location",
+                "condition": "=",
+                "value": "DIED",
+                "customization": "text color",
+                "customizationValue": "red"
+              }
+            ],
+            "fontSize": 45
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "e139259f-baa8-4410-9a4c-0d944cba9c45",
+          "title": "General Info",
+          "query": "MATCH (m:Patients{subject_id:$neodash_subject_id })-[r]-(n:Admissions)\nRETURN \nm.gender AS Sex, \nn.language AS Language,\nn.marital_status AS Marital_Status, \nn.race AS Race\nORDER BY n.dischtime DESC\nLIMIT 1\n\n",
+          "width": 3,
+          "height": 1,
+          "x": 9,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "columnWidths": "[1,2,2,4]",
+            "refreshButtonEnabled": true
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "6e4e1d70-d6a3-4329-97b8-67b3086ab5de",
+          "title": "Last Admission",
+          "query": "MATCH (m:Admissions {subject_id: $neodash_subject_id})-[r]-(n:DRG_Codes)\nRETURN \n  m.hadm_id AS Admission_ID,\n  apoc.temporal.format(m.admittime,\"dd/MM/yyyy\") AS DATE,\n  m.admission_type AS Admission_Type, \n  n.description AS DRG_Info,\n  m.admission_location AS Admission_Location,\n  m.discharge_location AS Discharge_Location\nORDER BY m.dischtime DESC\nLIMIT 1\n",
+          "width": 9,
+          "height": 1,
+          "x": 0,
+          "y": 5,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "Admission_ID",
+                "value": "Admission_ID",
+                "customization": "set variable",
+                "customizationValue": "hadm_id"
+              },
+              {
+                "condition": "Click",
+                "field": "Admission_ID",
+                "value": "2/Admissions & Transfers",
+                "customization": "set page",
+                "customizationValue": ""
+              }
+            ],
+            "columnWidths": "[1,1,1,2,2]",
+            "refreshButtonEnabled": true
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "760dabf0-e013-4f55-a42c-939ba29801b5",
+          "title": "List of Diagnoses",
+          "query": "// Current Diagnoses (table)\nMATCH (n:Admissions {subject_id: $neodash_subject_id})-[r]-(m:Diagnoses_ICD)\nRETURN m.icd_code AS ICD_Code,\n       m.long_title AS Diagnosis\nORDER BY n.admittime DESC\n\n\n\n",
+          "width": 3,
+          "height": 1,
+          "x": 9,
+          "y": 1,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "transposed": false,
+            "compact": false,
+            "columnWidths": "[1,5]"
+          },
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "9dcb110a-58fa-4317-98b0-a9f52526749c",
+          "title": "Simplified Patient Care Pathway ",
+          "query": "MATCH (p:Patients {subject_id: $neodash_subject_id})-[:HAS_ADMISSION]->(e)\nWITH e ORDER BY e.admittime\nMATCH (e)-[r:HAS_TRANSFER|HAS_ICU_STAY |HAS_SERVICE |HAS_DIAGNOSIS |HAS_PROCEDURE|NEXT|HAS_DRG_CODE]->(x)\nRETURN e,r,x",
+          "width": 9,
+          "height": 4,
+          "x": 0,
+          "y": 1,
+          "type": "graph",
+          "selection": {
+            "Admissions": "admission_location",
+            "HAS_TRANSFER": "(label)",
+            "Transfers": "careunit",
+            "HAS_SERVICE": "(label)",
+            "Services": "(label)",
+            "NEXT": "(label)",
+            "HAS_DRG_CODE": "(label)",
+            "DRG_Codes": "(label)",
+            "HAS_PROCEDURE": "(label)",
+            "Procedures_ICD": "long_title",
+            "HAS_DIAGNOSIS": "(label)",
+            "Diagnoses_ICD": "icd_code"
+          },
+          "settings": {
+            "refreshButtonEnabled": true,
+            "labelProperty": "weight",
+            "hideSelections": false,
+            "fixNodeAfterDrag": false,
+            "enableEditing": false,
+            "enableExploration": true,
+            "ignoreNonDefinedParams": false,
+            "layout": "force-directed",
+            "relationshipParticles": false,
+            "showPropertiesOnClick": true,
+            "defaultRelWidth": 2,
+            "arrowLengthProp": 5,
+            "showPropertiesOnHover": true,
+            "actionsRules": [
+              {
+                "condition": "onNodeClick",
+                "field": "Admissions",
+                "value": "hadm_id",
+                "customization": "set variable",
+                "customizationValue": "hadm_id"
+              }
+            ],
+            "fullscreenEnabled": true,
+            "downloadImageEnabled": true,
+            "styleRules": [
+              {
+                "field": "Admissions.firstAdmission",
+                "condition": "contains",
+                "value": "true",
+                "customization": "node color",
+                "customizationValue": "#4551FF"
+              },
+              {
+                "field": "Admissions.lastAdmission",
+                "condition": "contains",
+                "value": "true",
+                "customization": "node color",
+                "customizationValue": "#BB73EF"
+              }
+            ]
+          },
+          "schema": [
+            [
+              "Admissions",
+              "insurance",
+              "subject_id",
+              "dischtime",
+              "race",
+              "admission_type",
+              "admission_location",
+              "language",
+              "marital_status",
+              "admittime",
+              "edregtime",
+              "edouttime",
+              "hospital_expire_flag",
+              "firstAdmission",
+              "hadm_id",
+              "discharge_location",
+              "lastAdmission"
+            ],
+            [
+              "HAS_TRANSFER",
+              "weight"
+            ],
+            [
+              "Transfers",
+              "subject_id",
+              "intime",
+              "outtime",
+              "careunit",
+              "hadm_id",
+              "eventtype",
+              "transfer_id"
+            ],
+            [
+              "HAS_SERVICE",
+              "weight"
+            ],
+            [
+              "Services",
+              "subject_id",
+              "curr_service",
+              "transfertime",
+              "hadm_id"
+            ],
+            [
+              "NEXT",
+              "weight"
+            ],
+            [
+              "HAS_DRG_CODE",
+              "weight"
+            ],
+            [
+              "DRG_Codes",
+              "drg_type",
+              "subject_id",
+              "drg_severity",
+              "description",
+              "hadm_id",
+              "drg_code",
+              "drg_mortality"
+            ],
+            [
+              "HAS_PROCEDURE",
+              "weight"
+            ],
+            [
+              "Procedures_ICD",
+              "subject_id",
+              "icd_code",
+              "icd_version",
+              "hadm_id",
+              "chartdate",
+              "seq_num",
+              "long_title"
+            ],
+            [
+              "HAS_DIAGNOSIS",
+              "weight"
+            ],
+            [
+              "Diagnoses_ICD",
+              "subject_id",
+              "icd_code",
+              "icd_version",
+              "hadm_id",
+              "seq_num",
+              "long_title"
+            ]
+          ],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "8b258eb1-7f8a-486d-8cd0-4e533b8327d5",
+          "title": "Weight (Lbs) History",
+          "query": "MATCH (n:Patients{subject_id:$neodash_subject_id})-[e]->(m:OMR) \nWHERE m.result_name='Weight (Lbs)' AND m.seq_num=1\nRETURN \n  apoc.temporal.format(m.chartdate,\"dd/MM/yyyy\") AS DATE,\n  m.result_value AS WEIGHT\n  \n\n\n\n",
+          "width": 3,
+          "height": 2,
+          "x": 9,
+          "y": 4,
+          "type": "line",
+          "selection": {
+            "x": "DATE",
+            "value": [
+              "WEIGHT"
+            ]
+          },
+          "settings": {
+            "refreshButtonEnabled": true,
+            "xScale": "point",
+            "yScale": "linear",
+            "curve": "linear",
+            "xTickValues": 1,
+            "fullscreenEnabled": true,
+            "ignoreNonDefinedParams": true,
+            "legend": true,
+            "xTickRotationAngle": 90
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "65059b3c-4f9c-43a8-9420-77760ce6b8ed",
+          "title": "Major Diagnostic Category (DRG Code)",
+          "query": "\nMATCH (n:Admissions {subject_id: $neodash_subject_id})-[r]-(m:DRG_Codes)\nRETURN\n  m.description AS DRG_Description,\n  count(m) AS Count\n\n\n\n",
+          "width": 3,
+          "height": 2,
+          "x": 9,
+          "y": 2,
+          "type": "bar",
+          "selection": {
+            "index": "DRG_Description",
+            "value": "Count",
+            "key": "(none)"
+          },
+          "settings": {
+            "columnWidths": "[1,2,1,1]",
+            "groupMode": "grouped",
+            "layout": "vertical",
+            "barValues": true,
+            "positionLabel": "off",
+            "refreshButtonEnabled": true,
+            "fullscreenEnabled": true,
+            "showOptionalSelections": false,
+            "labelSkipHeight": 0,
+            "hideSelections": true,
+            "valueScale": "linear",
+            "enableArcLabels": true,
+            "sortByValue": true,
+            "marginBottom": 200,
+            "marginRight": 50,
+            "minValue": 0
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "2dc34cd0-4393-45b6-90d6-58c17bb87cc9",
+          "title": "Total Number of ICU Stays",
+          "query": "MATCH (n:ICU_Stays {subject_id: $neodash_subject_id}) RETURN count(n)",
+          "width": 2,
+          "height": 1,
+          "x": 7,
+          "y": 0,
+          "type": "value",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "verticalAlign": "middle",
+            "textAlign": "center"
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        }
+      ]
+    },
+    {
+      "title": "Admissions & Transfers",
+      "reports": [
+        {
+          "id": "9018d335-05ac-42a1-a703-1c89443f0f07",
+          "title": "All Admissions",
+          "query": "MATCH (m:Admissions {subject_id:$neodash_subject_id})\nRETURN m.hadm_id AS Admission_ID, m.admission_type AS Admission_Type, \n       apoc.temporal.format(m.admittime,\"dd/MM/yyyy\") AS Admission_Date,       \n       apoc.temporal.format(m.dischtime,\"dd/MM/yyyy\") AS Discharge_Date,\n//       duration.inDays(m.admittime,m.dischtime) AS Duration,\n       m.admission_location AS Admission_Location,     \n       m.discharge_location AS Discharge_Location\nORDER BY Admission_ID  DESC\n",
+          "width": 6,
+          "height": 2,
+          "x": 0,
+          "y": 3,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "Admission_ID",
+                "value": "Admission_ID",
+                "customization": "set variable",
+                "customizationValue": "hadm_id"
+              }
+            ],
+            "refreshButtonEnabled": true,
+            "columnWidths": "[1,2,1,1,2,2]"
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "d858aa5d-949f-41f9-ab63-b99a3a41bfc6",
+          "title": "Number of Admissions",
+          "query": "MATCH (n:Admissions{subject_id:$neodash_subject_id }) \nRETURN COUNT(n)\n",
+          "width": 3,
+          "height": 1,
+          "x": 6,
+          "y": 0,
+          "type": "value",
+          "selection": {},
+          "settings": {},
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "a9dd06ba-3ec7-471c-910b-faad687d338a",
+          "title": "All Admission Locations",
+          "query": "MATCH (m:Admissions{subject_id:$neodash_subject_id }) \nRETURN \n  m.admission_location AS Admission_Location,\n  COUNT(m) AS Admission_Count\n\n\n",
+          "width": 3,
+          "height": 2,
+          "x": 6,
+          "y": 1,
+          "type": "bar",
+          "selection": {
+            "index": "Admission_Location",
+            "value": "Admission_Count",
+            "key": "(none)"
+          },
+          "settings": {
+            "showOptionalSelections": false,
+            "groupMode": "grouped",
+            "layout": "vertical",
+            "minValue": 0,
+            "barValues": true,
+            "refreshButtonEnabled": true,
+            "hideSelections": true,
+            "legend": false,
+            "labelRotation": 0,
+            "enableArcLinkLabels": true,
+            "sortByValue": true,
+            "ignoreNonDefinedParams": true,
+            "enableArcLabels": true
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "6364d132-d92e-478a-a587-849cf3aed2e2",
+          "title": "Diagnoses_ICD",
+          "query": "MATCH (n:Admissions {hadm_id: $neodash_hadm_id})-[e]-(m:Diagnoses_ICD)\nRETURN n,e,m",
+          "width": 3,
+          "height": 2,
+          "x": 9,
+          "y": 3,
+          "type": "graph",
+          "selection": {
+            "Admissions": "admission_location",
+            "HAS_DIAGNOSIS": "(label)",
+            "Diagnoses_ICD": "long_title"
+          },
+          "settings": {
+            "frozen": false,
+            "nodePositions": {},
+            "refreshButtonEnabled": true,
+            "actionsRules": [
+              {
+                "condition": "onNodeClick",
+                "field": "Diagnoses_ICD",
+                "value": "4/Diagnoses",
+                "customization": "set page",
+                "customizationValue": "diagnoses"
+              }
+            ]
+          },
+          "schema": [
+            [
+              "Admissions",
+              "insurance",
+              "subject_id",
+              "marital_status",
+              "admittime",
+              "dischtime",
+              "discharge_location",
+              "race",
+              "hospital_expire_flag",
+              "admission_type",
+              "admission_location",
+              "language",
+              "hadm_id"
+            ],
+            [
+              "HAS_DIAGNOSIS",
+              "weight"
+            ],
+            [
+              "Diagnoses_ICD",
+              "subject_id",
+              "icd_code",
+              "icd_version",
+              "hadm_id",
+              "seq_num",
+              "long_title"
+            ]
+          ],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "9264c887-8e54-4e56-9cf3-fc94b78cb213",
+          "title": "All Transfers (excl. discharges)",
+          "query": "MATCH (n:Admissions {subject_id: $neodash_subject_id})-[e]-(m:Transfers) \nWHERE NOT m.eventtype='discharge'\nRETURN m.careunit,COUNT(e) AS Count",
+          "width": 3,
+          "height": 2,
+          "x": 9,
+          "y": 1,
+          "type": "pie",
+          "selection": {
+            "index": "m.careunit",
+            "value": "Count",
+            "key": "(none)"
+          },
+          "settings": {},
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "f8557725-c8bb-4221-9485-fe147202d39e",
+          "title": "Number of Transfers (excl. discharges)",
+          "query": "MATCH (n:Admissions {subject_id: $neodash_subject_id})-[e]-(m:Transfers) \nWHERE NOT m.eventtype='discharge'\nRETURN COUNT(e) AS Count\n\n",
+          "width": 3,
+          "height": 1,
+          "x": 9,
+          "y": 0,
+          "type": "value",
+          "selection": {},
+          "settings": {},
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "28aa82e3-d357-4817-a68a-9e01cf813fa1",
+          "title": "All Admission Types",
+          "query": "MATCH (m:Admissions{subject_id:$neodash_subject_id }) \nRETURN \n  m.admission_type AS Admission_Type,\n  COUNT(m) AS Admission_Count\n\n\n",
+          "width": 3,
+          "height": 2,
+          "x": 6,
+          "y": 3,
+          "type": "bar",
+          "selection": {
+            "index": "Admission_Type",
+            "value": "Admission_Count",
+            "key": "(none)"
+          },
+          "settings": {
+            "showOptionalSelections": false,
+            "groupMode": "grouped",
+            "layout": "vertical",
+            "minValue": 0,
+            "barValues": true,
+            "refreshButtonEnabled": true,
+            "hideSelections": true,
+            "legend": false,
+            "labelRotation": 0
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "6754b1da-f8fe-4330-863c-de1d92990dcd",
+          "title": "Admission ",
+          "query": "MATCH (n:Admissions {hadm_id: $neodash_hadm_id})-[r:HAS_TRANSFER|HAS_ICU_STAY |HAS_SERVICE |HAS_DIAGNOSIS |HAS_PROCEDURE|NEXT|HAS_DRG_CODE]-(m)\nRETURN n,r,m\n\n",
+          "width": 6,
+          "height": 3,
+          "x": 0,
+          "y": 0,
+          "type": "graph",
+          "selection": {
+            "Admissions": "admission_location",
+            "HAS_TRANSFER": "(label)",
+            "Transfers": "(label)",
+            "HAS_SERVICE": "(label)",
+            "Services": "(label)",
+            "HAS_DRG_CODE": "(label)",
+            "DRG_Codes": "(label)",
+            "HAS_PROCEDURE": "(label)",
+            "Procedures_ICD": "(label)",
+            "HAS_DIAGNOSIS": "(label)",
+            "Diagnoses_ICD": "(label)",
+            "NEXT": "(label)"
+          },
+          "settings": {
+            "frozen": false,
+            "nodePositions": {},
+            "refreshButtonEnabled": true,
+            "relationshipParticles": true
+          },
+          "schema": [
+            [
+              "Admissions",
+              "insurance",
+              "subject_id",
+              "marital_status",
+              "admittime",
+              "dischtime",
+              "discharge_location",
+              "race",
+              "hospital_expire_flag",
+              "admission_type",
+              "admission_location",
+              "language",
+              "hadm_id",
+              "edregtime",
+              "edouttime"
+            ],
+            [
+              "HAS_TRANSFER",
+              "weight"
+            ],
+            [
+              "Transfers",
+              "subject_id",
+              "intime",
+              "outtime",
+              "careunit",
+              "hadm_id",
+              "eventtype",
+              "transfer_id"
+            ],
+            [
+              "HAS_SERVICE",
+              "weight"
+            ],
+            [
+              "Services",
+              "subject_id",
+              "curr_service",
+              "transfertime",
+              "hadm_id"
+            ],
+            [
+              "HAS_DRG_CODE",
+              "weight"
+            ],
+            [
+              "DRG_Codes",
+              "subject_id",
+              "drg_type",
+              "description",
+              "hadm_id",
+              "drg_code"
+            ],
+            [
+              "HAS_PROCEDURE",
+              "weight"
+            ],
+            [
+              "Procedures_ICD",
+              "subject_id",
+              "icd_code",
+              "icd_version",
+              "hadm_id",
+              "chartdate",
+              "seq_num",
+              "long_title"
+            ],
+            [
+              "HAS_DIAGNOSIS",
+              "weight"
+            ],
+            [
+              "Diagnoses_ICD",
+              "subject_id",
+              "icd_code",
+              "icd_version",
+              "hadm_id",
+              "seq_num",
+              "long_title"
+            ],
+            [
+              "NEXT",
+              "weight"
+            ]
+          ],
+          "database": "t-mimic-iv"
+        }
+      ]
+    },
+    {
+      "title": "ICU Stays",
+      "reports": [
+        {
+          "id": "9d0cbf9c-408f-4349-bd30-10324280fa91",
+          "title": "ICU Stay Events",
+          "query": "MATCH (n:ICU_Stays {subject_id: $neodash_subject_id})-[e]-(m) \nWHERE NOT type(e)= 'HAS_ICU_STAY'\nRETURN DISTINCT type(e) AS ICU_Events",
+          "width": 2,
+          "height": 2,
+          "x": 8,
+          "y": 2,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "ICU_Events",
+                "value": "ICU_Events",
+                "customization": "set variable",
+                "customizationValue": "icu_event"
+              }
+            ],
+            "type": "Custom Query",
+            "entityType": "ICU_Event",
+            "parameterName": "neodash_icu_event",
+            "refreshButtonEnabled": true
+          },
+          "database": "t-mimic-iv",
+          "schema": []
+        },
+        {
+          "id": "6a89fbad-88a6-4d5f-ac55-67abf77d62df",
+          "title": "Patient Care Pathway - ICU Focus (Limit 100)",
+          "query": "MATCH (p:Admissions {subject_id: $neodash_subject_id})-[r:HAS_ICU_STAY|NEXT]->(e)-[rr]-(m)\n//MATCH (e)-[r:HAS_TRANSFER|HAS_ICU_STAY|HAS_SERVICE |HAS_DIAGNOSIS |HAS_PROCEDURE|NEXT]->(x)\nWHERE type(rr) = $neodash_icu_event\nRETURN p,r,e,rr,m\nLIMIT 100\n\n",
+          "width": 8,
+          "height": 4,
+          "x": 0,
+          "y": 0,
+          "type": "graph",
+          "selection": {
+            "Admissions": "admission_location",
+            "HAS_ICU_STAY": "(label)",
+            "ICU_Stays": "first_careunit",
+            "HAS_PROCEDURE_EVENT": "(label)",
+            "Procedure_Events": "label"
+          },
+          "settings": {
+            "showPropertiesOnHover": true,
+            "refreshButtonEnabled": true,
+            "description": "Please choose one of the following ICU Stay Events ",
+            "relationshipParticles": true,
+            "arrowLengthProp": 5,
+            "fullscreenEnabled": true
+          },
+          "schema": [
+            [
+              "Admissions",
+              "subject_id",
+              "insurance",
+              "dischtime",
+              "race",
+              "discharge_location",
+              "admission_location",
+              "admission_type",
+              "language",
+              "marital_status",
+              "admittime",
+              "edregtime",
+              "edouttime",
+              "hospital_expire_flag",
+              "hadm_id"
+            ],
+            [
+              "HAS_ICU_STAY",
+              "weight"
+            ],
+            [
+              "ICU_Stays",
+              "last_careunit",
+              "subject_id",
+              "intime",
+              "outtime",
+              "hadm_id",
+              "first_careunit",
+              "stay_id"
+            ],
+            [
+              "HAS_PROCEDURE_EVENT",
+              "weight"
+            ],
+            [
+              "Procedure_Events",
+              "subject_id",
+              "ordercategorydescription",
+              "statusdescription",
+              "orderid",
+              "ordercategoryname",
+              "endtime",
+              "storetime",
+              "starttime",
+              "label",
+              "continueinnextdept",
+              "originalrate",
+              "param_type",
+              "stay_id",
+              "valueuom",
+              "originalamount",
+              "itemid",
+              "patientweight",
+              "unitname",
+              "isopenbag",
+              "hadm_id",
+              "caregiver_id",
+              "category",
+              "value",
+              "locationcategory",
+              "location"
+            ]
+          ],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "81526a70-156f-46cb-b208-21b819b79f11",
+          "title": "Selected Event Count",
+          "query": "MATCH (n:ICU_Stays {subject_id: $neodash_subject_id})-[e]-(m) \nWHERE type(e) = $neodash_icu_event\nRETURN COUNT(e) \n\n",
+          "width": 2,
+          "height": 2,
+          "x": 10,
+          "y": 2,
+          "type": "value",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "textAlign": "center",
+            "verticalAlign": "middle"
+          },
+          "database": "t-mimic-iv",
+          "schema": []
+        },
+        {
+          "id": "0dd4808e-a1b9-4342-882d-694ae55131a3",
+          "title": "Event Category",
+          "query": "MATCH (n:ICU_Stays {subject_id: $neodash_subject_id})-[r]-(m)\nWHERE type(r) = $neodash_icu_event\nRETURN\n  m.category AS Category,\n//  m.label AS Label,\n  count(m) AS Count\n",
+          "width": 6,
+          "height": 2,
+          "x": 0,
+          "y": 4,
+          "type": "bar",
+          "selection": {
+            "index": "Category",
+            "value": "Count",
+            "key": "(none)"
+          },
+          "settings": {
+            "refreshButtonEnabled": true,
+            "marginBottom": 125,
+            "hideSelections": true,
+            "legend": false,
+            "showOptionalSelections": false
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "36ca29f5-cabb-4d8b-bf1f-4b06f83d0ce1",
+          "title": "Event Label (Limit 100)",
+          "query": "MATCH (n:ICU_Stays {subject_id: $neodash_subject_id})-[r]-(m)\nWHERE type(r) = $neodash_icu_event\nRETURN\n  m.category AS Category,\n  m.label AS Label,\n  count(m) AS Count\nLIMIT 100",
+          "width": 6,
+          "height": 2,
+          "x": 6,
+          "y": 4,
+          "type": "bar",
+          "selection": {
+            "index": "Label",
+            "value": "Count",
+            "key": "(none)"
+          },
+          "settings": {
+            "refreshButtonEnabled": true,
+            "marginBottom": 125,
+            "hideSelections": true,
+            "legend": false,
+            "showOptionalSelections": false
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "4b7c8840-658c-4d88-b4d7-95c54a1878aa",
+          "title": "Number of ICU Stays",
+          "query": "MATCH (m:ICU_Stays {subject_id: $neodash_subject_id}) \nRETURN \n  m.first_careunit,\n  COUNT(m) AS Count\n\n\n\n\n",
+          "width": 2,
+          "height": 2,
+          "x": 10,
+          "y": 0,
+          "type": "pie",
+          "selection": {
+            "index": "m.first_careunit",
+            "value": "Count",
+            "key": "(none)"
+          },
+          "settings": {
+            "enableArcLabels": true,
+            "refreshButtonEnabled": true,
+            "enableArcLinkLabels": true
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "d1271dcb-8706-4bce-a69f-71a671a0b522",
+          "title": "Number of ICU Stays",
+          "query": "MATCH (n:Admissions {subject_id: $neodash_subject_id})-[e]-(m:ICU_Stays) \nRETURN COUNT(e) AS Count\n\n\n\n\n",
+          "width": 2,
+          "height": 2,
+          "x": 8,
+          "y": 0,
+          "type": "value",
+          "selection": {},
+          "settings": {
+            "verticalAlign": "middle",
+            "textAlign": "center"
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        }
+      ]
+    },
+    {
+      "title": "Diagnoses",
+      "reports": [
+        {
+          "id": "a0a64466-3cd4-4271-a786-47928352ca70",
+          "title": "Diagnosis ICD",
+          "query": "MATCH (m:Diagnoses_ICD {subject_id: $neodash_subject_id})\nRETURN m.icd_code AS ICD_Code, m.long_title AS Diagnosis\n\n\n",
+          "width": 4,
+          "height": 2,
+          "x": 8,
+          "y": 3,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "columnWidths": "[1,5]",
+            "styleRules": [
+              {
+                "field": "",
+                "condition": "=",
+                "value": "",
+                "customization": "row color",
+                "customizationValue": "black"
+              }
+            ],
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "ICD_Code",
+                "value": "ICD_Code",
+                "customization": "set variable",
+                "customizationValue": "icd_code"
+              },
+              {
+                "condition": "Click",
+                "field": "ICD_Code",
+                "value": "8/Comparison",
+                "customization": "set page",
+                "customizationValue": ""
+              },
+              {
+                "condition": "Click",
+                "field": "Diagnosis",
+                "value": "",
+                "customization": "set variable",
+                "customizationValue": ""
+              }
+            ]
+          },
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "3a691e8e-c9a0-4644-90c7-6d6a43fd8d35",
+          "title": "Patient Care Pathway - Admissions & Diagnoses Only",
+          "query": "MATCH (p:Patients {subject_id: $neodash_subject_id})-[:HAS_ADMISSION]->(e)\nWITH e ORDER BY e.admittime\nMATCH (e)-[r: HAS_DIAGNOSIS|NEXT]->(x)\nRETURN e,r,x",
+          "width": 8,
+          "height": 5,
+          "x": 0,
+          "y": 0,
+          "type": "graph",
+          "selection": {
+            "Admissions": "admission_location",
+            "NEXT": "(label)",
+            "HAS_DIAGNOSIS": "(label)",
+            "Diagnoses_ICD": "long_title"
+          },
+          "settings": {
+            "refreshButtonEnabled": true,
+            "relationshipParticles": true
+          },
+          "database": "t-mimic-iv",
+          "schema": [
+            [
+              "Admissions",
+              "subject_id",
+              "insurance",
+              "dischtime",
+              "race",
+              "admission_location",
+              "admission_type",
+              "language",
+              "marital_status",
+              "admittime",
+              "edregtime",
+              "edouttime",
+              "hospital_expire_flag",
+              "hadm_id",
+              "discharge_location"
+            ],
+            [
+              "NEXT",
+              "weight"
+            ],
+            [
+              "HAS_DIAGNOSIS",
+              "weight"
+            ],
+            [
+              "Diagnoses_ICD",
+              "subject_id",
+              "icd_code",
+              "icd_version",
+              "hadm_id",
+              "seq_num",
+              "long_title"
+            ]
+          ]
+        },
+        {
+          "id": "41774a48-fd84-4ae4-aa17-dbc4a69e73fc",
+          "title": "DRG Codes",
+          "query": "MATCH (m:DRG_Codes {subject_id: $neodash_subject_id})\nRETURN m.drg_code, m.description, m.drg_mortality, m.severity\n\n\n",
+          "width": 4,
+          "height": 3,
+          "x": 8,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "columnWidths": "[1,3,1,1]"
+          },
+          "database": "t-mimic-iv"
+        }
+      ]
+    },
+    {
+      "title": "Medications & Prescriptions",
+      "reports": [
+        {
+          "id": "56732a84-296a-4a29-96ec-732eac8a0898",
+          "title": " Total Number of Prescriptions",
+          "query": "\nMATCH (m:Prescriptions {subject_id:$neodash_subject_id }) RETURN count(m)\n",
+          "width": 2,
+          "height": 1,
+          "x": 10,
+          "y": 0,
+          "type": "value",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true
+          },
+          "database": "t-mimic-iv",
+          "schema": []
+        },
+        {
+          "id": "9ff38986-c43a-4dde-b48b-5118f6dc5ff5",
+          "title": " All Prescriptions Table",
+          "query": "MATCH (Prescriptions:Prescriptions {subject_id:$neodash_subject_id})\nRETURN \n  Prescriptions,\n  Prescriptions.pharmacy_id,\n  Prescriptions.drug, \n  Prescriptions.doses_per_24_hrs\n",
+          "width": 5,
+          "height": 5,
+          "x": 0,
+          "y": 4,
+          "type": "table",
+          "selection": {},
+          "settings": {},
+          "database": "t-mimic-iv",
+          "schema": []
+        },
+        {
+          "id": "015b5165-118b-4b3d-9332-f71f3e47bfdc",
+          "title": "",
+          "query": "MATCH (p:Admissions {subject_id: $neodash_subject_id})-[r:HAS_PRESCRIPTION]->(e)\nRETURN p,e,r\nLIMIT 100\n\n\n",
+          "width": 10,
+          "height": 4,
+          "x": 0,
+          "y": 0,
+          "type": "sankey",
+          "selection": {
+            "Admissions": "admission_location",
+            "Prescriptions": "drug"
+          },
+          "settings": {
+            "showPropertiesOnHover": true,
+            "refreshButtonEnabled": true,
+            "relationshipParticles": true,
+            "labelProperty": "weight"
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        },
+        {
+          "id": "56732a84-296a-4a29-96ec-732eac8a0898",
+          "title": " Total Number of Prescriptions",
+          "query": "\nMATCH (m:Prescriptions {subject_id:$neodash_subject_id }) RETURN count(m)\n",
+          "width": 2,
+          "height": 1,
+          "x": 10,
+          "y": 0,
+          "type": "value",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true
+          },
+          "database": "t-mimic-iv",
+          "schema": []
+        },
+        {
+          "id": "9ff38986-c43a-4dde-b48b-5118f6dc5ff5",
+          "title": " All Prescriptions Table",
+          "query": "MATCH (Prescriptions:Prescriptions {subject_id:$neodash_subject_id})\nRETURN \n  Prescriptions,\n  Prescriptions.pharmacy_id,\n  Prescriptions.drug, \n  Prescriptions.doses_per_24_hrs\n",
+          "width": 5,
+          "height": 5,
+          "x": 0,
+          "y": 4,
+          "type": "table",
+          "selection": {},
+          "settings": {},
+          "database": "t-mimic-iv",
+          "schema": []
+        },
+        {
+          "id": "fd51b833-4a2e-414f-9f7a-8ff7cf57b77f",
+          "title": " All Medications Table",
+          "query": "MATCH (m:Pharmacy {subject_id:$neodash_subject_id }) \nRETURN m.pharmacy_id,m.status,m.medication, m.duration, m.duration_interval,m.frequency,m.route",
+          "width": 5,
+          "height": 5,
+          "x": 5,
+          "y": 4,
+          "type": "table",
+          "selection": {},
+          "settings": {},
+          "database": "t-mimic-iv",
+          "schema": []
+        }
+      ]
+    },
+    {
+      "title": "Patient Journey (Sankey)",
+      "reports": [
+        {
+          "id": "f5120cb8-462b-481c-aa9d-298c7235d44d",
+          "title": "Sankey Model",
+          "query": "MATCH (p:Patients {subject_id: $neodash_subject_id})-[r:HAS_ADMISSION]-(e)-[rr:NEXT|HAS_ICU_STAY|HAS_SERVICE|HAS_DIAGNOSIS|HAS_PROCEDURE|HAS_TRANSFER|HAS_HCPCS_EVENT|HAS_DRG_CODE]->(x)\n//OPTIONAL MATCH (x)-[rrr:HAS_PROCEDURE_EVENT]-(z) \nRETURN p,r,e,rr,x\nLIMIT 1000",
+          "width": 12,
+          "height": 5,
+          "x": 0,
+          "y": 0,
+          "type": "sankey",
+          "selection": {
+            "Patients": "subject_id",
+            "Admissions": "admission_location",
+            "Transfers": "eventtype",
+            "Services": "curr_service",
+            "DRG_Codes": "description",
+            "Procedures_ICD": "long_title",
+            "Diagnoses_ICD": "long_title",
+            "HCPCS_Events": "(label)"
+          },
+          "settings": {
+            "refreshButtonEnabled": true,
+            "relationshipParticles": true,
+            "labelProperty": "weight",
+            "legend": false,
+            "labelPosition": "inside",
+            "labelOrientation": "horizontal"
+          },
+          "schema": [],
+          "database": "t-mimic-iv"
+        }
+      ]
+    },
+    {
+      "title": "Patient Journey (Graph)",
+      "reports": [
+        {
+          "id": "5f24915d-77fa-40f4-8fe9-844a0c3af3f1",
+          "title": "Graph Model",
+          "query": "MATCH (p:Patients {subject_id: $neodash_subject_id})-[r:HAS_ADMISSION]-(e)-[rr:NEXT|HAS_ICU_STAY|HAS_SERVICE|HAS_DIAGNOSIS|HAS_PROCEDURE|HAS_TRANSFER|HAS_HCPCS_EVENT|HAS_DRG_CODE]->(x)\nOPTIONAL MATCH (x)-[rrr:HAS_PROCEDURE_EVENT]-(z) \nRETURN p,r,e,rr,x,rrr,z\nLIMIT 1000\n\n\n",
+          "width": 12,
+          "height": 5,
+          "x": 0,
+          "y": 0,
+          "type": "graph",
+          "selection": {
+            "Patients": "subject_id",
+            "HAS_ADMISSION": "(label)",
+            "Admissions": "admission_type",
+            "HAS_TRANSFER": "(label)",
+            "Transfers": "careunit",
+            "HAS_SERVICE": "(label)",
+            "Services": "(label)",
+            "HAS_DRG_CODE": "(label)",
+            "DRG_Codes": "(label)",
+            "HAS_PROCEDURE": "(label)",
+            "Procedures_ICD": "(label)",
+            "NEXT": "(label)",
+            "HAS_DIAGNOSIS": "(label)",
+            "Diagnoses_ICD": "(label)",
+            "HAS_HCPCS_EVENT": "(label)",
+            "HCPCS_Events": "(label)"
+          },
+          "settings": {
+            "relationshipParticles": false
+          },
+          "schema": [
+            [
+              "Patients",
+              "subject_id",
+              "anchor_age",
+              "anchor_year",
+              "anchor_year_group",
+              "gender"
+            ],
+            [
+              "HAS_ADMISSION",
+              "weight"
+            ],
+            [
+              "Admissions",
+              "insurance",
+              "subject_id",
+              "dischtime",
+              "discharge_location",
+              "race",
+              "admission_location",
+              "admission_type",
+              "language",
+              "marital_status",
+              "admittime",
+              "edregtime",
+              "edouttime",
+              "hospital_expire_flag",
+              "hadm_id"
+            ],
+            [
+              "HAS_TRANSFER",
+              "weight"
+            ],
+            [
+              "Transfers",
+              "subject_id",
+              "intime",
+              "outtime",
+              "careunit",
+              "hadm_id",
+              "eventtype",
+              "transfer_id"
+            ],
+            [
+              "HAS_SERVICE",
+              "weight"
+            ],
+            [
+              "Services",
+              "subject_id",
+              "curr_service",
+              "transfertime",
+              "hadm_id",
+              "prev_service"
+            ],
+            [
+              "HAS_DRG_CODE",
+              "weight"
+            ],
+            [
+              "DRG_Codes",
+              "subject_id",
+              "drg_type",
+              "description",
+              "hadm_id",
+              "drg_code",
+              "drg_severity",
+              "drg_mortality"
+            ],
+            [
+              "HAS_PROCEDURE",
+              "weight"
+            ],
+            [
+              "Procedures_ICD",
+              "subject_id",
+              "icd_code",
+              "icd_version",
+              "hadm_id",
+              "chartdate",
+              "seq_num",
+              "long_title"
+            ],
+            [
+              "NEXT",
+              "weight"
+            ],
+            [
+              "HAS_DIAGNOSIS",
+              "weight"
+            ],
+            [
+              "Diagnoses_ICD",
+              "subject_id",
+              "icd_code",
+              "icd_version",
+              "hadm_id",
+              "seq_num",
+              "long_title"
+            ],
+            [
+              "HAS_HCPCS_EVENT",
+              "weight"
+            ],
+            [
+              "HCPCS_Events",
+              "subject_id",
+              "short_description",
+              "hcpcs_cd",
+              "hadm_id",
+              "chartdate",
+              "long_description",
+              "seq_num"
+            ]
+          ],
+          "database": "t-mimic-iv"
+        }
+      ]
+    }
+  ],
+  "parameters": {},
+  "extensions": {
+    "active": true,
+    "activeReducers": [],
+    "advanced-charts": {
+      "active": true
+    },
+    "actions": {
+      "active": true
+    },
+    "styling": {
+      "active": true
+    }
+  }
+}
